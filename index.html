@@ -107,7 +107,7 @@
         </label>
 
         <label>
-          Headshot (Resize to 150×150)
+          Headshot (Resize to 100×100)
           <input type="file" id="headshot" accept="image/*">
           <span class="note">Leave blank if you want the version without a headshot.</span>
         </label>
@@ -135,7 +135,7 @@
     let headshotDataUrl = "";
     let currentHtml = ""; // store latest signature HTML
 
-    // Resize headshot to 150x150 center crop
+    // Resize headshot to 100x100 center crop
     document.getElementById('headshot').addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) { headshotDataUrl = ""; return; }
@@ -144,7 +144,7 @@
       reader.onload = function (ev) {
         const img = new Image();
         img.onload = function () {
-          const size = 150;
+          const size = 100;
           const canvas = document.createElement('canvas');
           canvas.width = size;
           canvas.height = size;
@@ -214,14 +214,14 @@
         leftHTML =
           `<table cellpadding="0" cellspacing="0" border="0">
              <tr><td>
-               <img src="${headshotDataUrl}" style="width:150px;height:150px;object-fit:cover;display:block;border:0;">
+               <img src="${headshotDataUrl}" style="width:100px;height:100px;object-fit:cover;display:block;border:0;">
              </td></tr>
              <tr><td style="padding-top:6px;">
-               <img src="${logoUrl}" style="width:150px;display:block;border:0;">
+               <img src="${logoUrl}" style="width:100px;display:block;border:0;">
              </td></tr>
            </table>`;
       } else {
-        leftHTML = `<img src="${logoUrl}" style="width:150px;display:block;border:0;">`;
+        leftHTML = `<img src="${logoUrl}" style="width:100px;display:block;border:0;">`;
       }
 
       const html =
@@ -269,7 +269,7 @@
         return;
       }
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(currentHtml)
+        navigator.clipclipboard.writeText(currentHtml)
           .then(() => alert("HTML copied to clipboard."))
           .catch(() => fallbackCopyHtml());
       } else {

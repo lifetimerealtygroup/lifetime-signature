@@ -49,14 +49,6 @@
       flex: 1 1 350px;
       min-width: 320px;
     }
-    textarea {
-      width: 100%;
-      height: 260px;
-      font-family: monospace;
-      font-size: 11px;
-      box-sizing: border-box;
-      white-space: pre;
-    }
     .preview {
       border: 1px solid #ccc;
       padding: 12px;
@@ -122,6 +114,7 @@
 
         <div style="margin-top:12px;">
           <button type="button" onclick="generateSignature()">Generate Signature</button>
+          <button type="button" onclick="copyHtml()" style="margin-left:8px;">Copy HTML</button>
         </div>
 
       </form>
@@ -131,13 +124,7 @@
       <h3>Highlight, Copy, &amp; Paste</h3>
       <div id="preview" class="preview"></div>
       <div style="margin-top:8px;">
-        <button type="button" onclick="copyPreview()">Copy Signature</button>
-      </div>
-
-      <h3 style="margin-top:16px;">Signature HTML (optional)</h3>
-      <textarea id="outputHtml" readonly></textarea>
-      <div style="margin-top:8px;">
-        <button type="button" onclick="copyHtml()">Copy HTML</button>
+        <button type="button" onclick="copySignature()">Copy Signature</button>
       </div>
     </div>
   </div>
@@ -146,6 +133,7 @@
     const logoUrl = "https://inception-app-prod.s3.amazonaws.com/ODc4ODI2MmItYmViMy00MGIzLTllMWItODUxNTE0Zjk1OWY4/content/2025/10/fc7e2f52486fd012c387493d19d22ad09570bd84.png";
 
     let headshotDataUrl = "";
+    let currentHtml = ""; // store latest signature HTML
 
     // Resize headshot to 100x100 center crop
     document.getElementById('headshot').addEventListener('change', function (e) {
@@ -271,19 +259,49 @@
           </tr>
         </table>`;
 
+      currentHtml = html;
       document.getElementById("preview").innerHTML = html;
-      document.getElementById("outputHtml").value = html;
     }
 
     function copyHtml() {
-      const ta = document.getElementById("outputHtml");
-      ta.select();
-      document.execCommand("copy");
-      alert("HTML copied!");
+      if (!currentHtml) {
+        alert("Please click Generate Signature first.");
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentHtml)
+          .then(() => alert("HTML copied to clipboard."))
+          .catch(() => fallbackCopyHtml());
+      } else {
+        fallbackCopyHtml();
+      }
     }
 
-    function copyPreview() {
+    function fallbackCopyHtml() {
+      if (!currentHtml) {
+        alert("Please click Generate Signature first.");
+        return;
+      }
+      const tempArea = document.createElement("textarea");
+      tempArea.value = currentHtml;
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      try {
+        document.execCommand("copy");
+        alert("HTML copied to clipboard.");
+      } catch (e) {
+        alert("Could not copy HTML automatically. You may need to copy from the preview manually.");
+      }
+      document.body.removeChild(tempArea);
+    }
+
+    function copySignature() {
       const preview = document.getElementById("preview");
+
+      if (!preview.innerHTML.trim()) {
+        alert("Please click Generate Signature first.");
+        return;
+      }
 
       // Try modern clipboard with HTML support
       if (navigator.clipboard && window.ClipboardItem) {
@@ -291,14 +309,14 @@
         const blob = new Blob([preview.innerHTML], { type });
         const data = [new ClipboardItem({ [type]: blob })];
         navigator.clipboard.write(data)
-          .then(() => alert("Preview copied to clipboard."))
-          .catch(() => fallbackCopyPreview(preview));
+          .then(() => alert("Signature copied to clipboard."))
+          .catch(() => fallbackCopySignature(preview));
       } else {
-        fallbackCopyPreview(preview);
+        fallbackCopySignature(preview);
       }
     }
 
-    function fallbackCopyPreview(preview) {
+    function fallbackCopySignature(preview) {
       const selection = window.getSelection();
       const range = document.createRange();
       range.selectNodeContents(preview);
@@ -306,9 +324,9 @@
       selection.addRange(range);
       try {
         document.execCommand('copy');
-        alert('Preview copied to clipboard.');
+        alert('Signature copied to clipboard.');
       } catch (e) {
-        alert('If this did not work, please manually highlight the preview and copy it.');
+        alert('If this did not work, please manually highlight the signature and copy it.');
       }
       selection.removeAllRanges();
     }
@@ -326,5 +344,3 @@
 
 </body>
 </html>
-
-

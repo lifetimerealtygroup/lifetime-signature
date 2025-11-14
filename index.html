@@ -74,7 +74,7 @@
 
 <body>
   <h1>Lifetime Realty &amp; Investments – Email Signature Generator</h1>
-  <p>Fill this out and click <strong>Generate</strong>. Then copy the HTML into Gmail, Apple Mail, Outlook, etc.</p>
+  <p>Fill this out and click <strong>Generate</strong>. Then copy the preview and paste it into your Gmail or Outlook. Apple Mail is not supported.</p>
 
   <div class="row">
     <div class="col">
@@ -111,29 +111,34 @@
 
         <label>
           Website URL
-          <input type="url" id="website" placeholder="https://www.lifetimerealtygroup.com">
+          <input type="url" id="website" placeholder="www.lifetimerealtygroup.com">
         </label>
 
         <label>
-          Headshot (Resize to 200×200)
+          Headshot (Resize to 100×100)
           <input type="file" id="headshot" accept="image/*">
           <span class="note">Leave blank if you want the version without a headshot.</span>
         </label>
 
         <div style="margin-top:12px;">
           <button type="button" onclick="generateSignature()">Generate Signature</button>
-          <button type="button" onclick="copyHtml()" style="margin-left:8px;">Copy HTML</button>
         </div>
 
       </form>
     </div>
 
     <div class="col">
-      <h3>Preview</h3>
+      <h3>Highlight, Copy, &amp; Paste</h3>
       <div id="preview" class="preview"></div>
+      <div style="margin-top:8px;">
+        <button type="button" onclick="copyPreview()">Copy Preview</button>
+      </div>
 
-      <h3 style="margin-top:16px;">Signature HTML</h3>
+      <h3 style="margin-top:16px;">Signature HTML (optional)</h3>
       <textarea id="outputHtml" readonly></textarea>
+      <div style="margin-top:8px;">
+        <button type="button" onclick="copyHtml()">Copy HTML</button>
+      </div>
     </div>
   </div>
 
@@ -142,6 +147,7 @@
 
     let headshotDataUrl = "";
 
+    // Resize headshot to 100x100 center crop
     document.getElementById('headshot').addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) { headshotDataUrl = ""; return; }
@@ -150,8 +156,8 @@
       reader.onload = function (ev) {
         const img = new Image();
         img.onload = function () {
+          const size = 100;
           const canvas = document.createElement('canvas');
-          const size = 200;
           canvas.width = size;
           canvas.height = size;
 
@@ -178,7 +184,7 @@
           tel: `1${digits}`
         };
       }
-      return { display: raw, tel: digits };
+      return { display: raw, tel: digits || raw };
     }
 
     function generateSignature() {
@@ -188,6 +194,11 @@
       const email = document.getElementById('email').value.trim();
       const website = document.getElementById('website').value.trim();
       const cellInput = document.getElementById('cell').value.trim();
+
+      if (!name || !email || !cellInput) {
+        alert("Please fill in Name, Email, and Cell Phone Number.");
+        return;
+      }
 
       const { display: cellDisplay, tel: cellRaw } = formatPhone(cellInput);
 
@@ -213,14 +224,20 @@
 
       if (headshotDataUrl) {
         leftHTML =
-          `<table><tr><td><img src="${headshotDataUrl}" style="width:200px;height:200px;object-fit:cover;display:block;"></td></tr>
-           <tr><td><img src="${logoUrl}" style="width:200px;display:block;margin-top:6px;"></td></tr></table>`;
+          `<table cellpadding="0" cellspacing="0" border="0">
+             <tr><td>
+               <img src="${headshotDataUrl}" style="width:100px;height:100px;object-fit:cover;display:block;border:0;">
+             </td></tr>
+             <tr><td style="padding-top:6px;">
+               <img src="${logoUrl}" style="width:100px;display:block;border:0;">
+             </td></tr>
+           </table>`;
       } else {
-        leftHTML = `<img src="${logoUrl}" style="width:200px;display:block;">`;
+        leftHTML = `<img src="${logoUrl}" style="width:100px;display:block;border:0;">`;
       }
 
       const html =
-        `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial;color:#000;font-size:6px;">
+        `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial;color:#000;font-size:10px;">
           <tr>
             <td style="padding-right:16px;border-right:1px solid #000;" valign="middle">
               ${leftHTML}
@@ -228,23 +245,27 @@
             <td width="16"></td>
             <td valign="middle">
 
-              <div style="font-size:15px;font-weight:bold;margin:0 0 4px 0;">${name}</div>
+              <div style="font-size:18px;font-weight:bold;margin:0 0 4px 0;">${name}</div>
 
-              ${jobLine ? `<div style="font-size:6px;text-transform:uppercase;">${jobLine}</div>` : ""}
+              ${jobLine ? `<div style="font-size:10px;text-transform:uppercase;margin:0;">${jobLine}</div>` : ""}
 
-              <div style="font-size:6px;text-transform:uppercase;margin-top:2px;">LIFETIME REALTY &amp; INVESTMENTS</div>
-
-              <div style="height:8px;"></div>
-
-              <div style="font-size:6px;letter-spacing:0.67px;"><strong>C:</strong> <a href="tel:${cellRaw}" style="color:#000;text-decoration:none;">${cellDisplay}</a></div>
-              <div style="font-size:6px;letter-spacing:0.67px;"><strong>E:</strong> <a href="mailto:${email}" style="color:#000;text-decoration:none;">${email}</a></div>
-              ${website ? `<div style="font-size:6px;letter-spacing:0.67px;"><strong>W:</strong> <a href="${website}" style="color:#000;text-decoration:none;">${website}</a></div>` : ""}
+              <div style="font-size:10px;text-transform:uppercase;margin:2px 0 0 0;">LIFETIME REALTY &amp; INVESTMENTS</div>
 
               <div style="height:8px;"></div>
 
-              <table><tr><td style="background:#000;padding:4px 10px;">
-                <a href="${bookLink}" style="color:#fff;text-decoration:none;font-size:7px;text-transform:uppercase;">BOOK A MEETING</a>
-              </td></tr></table>
+              <div style="font-size:10px;letter-spacing:0.67px;margin:0;"><strong>C:</strong> <a href="tel:${cellRaw}" style="color:#000;text-decoration:none;">${cellDisplay}</a></div>
+              <div style="font-size:10px;letter-spacing:0.67px;margin:0;"><strong>E:</strong> <a href="mailto:${email}" style="color:#000;text-decoration:none;">${email}</a></div>
+              ${website ? `<div style="font-size:10px;letter-spacing:0.67px;margin:0;"><strong>W:</strong> <a href="https://${website.replace(/^https?:\/\//i, '')}" style="color:#000;text-decoration:none;">${website}</a></div>` : ""}
+
+              <div style="height:8px;"></div>
+
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background:#000;padding:4px 10px;text-align:center;">
+                    <a href="${bookLink}" style="color:#fff;text-decoration:none;font-size:10px;text-transform:uppercase;">BOOK A MEETING</a>
+                  </td>
+                </tr>
+              </table>
 
             </td>
           </tr>
@@ -261,17 +282,49 @@
       alert("HTML copied!");
     }
 
+    function copyPreview() {
+      const preview = document.getElementById("preview");
+
+      // Try modern clipboard with HTML support
+      if (navigator.clipboard && window.ClipboardItem) {
+        const type = "text/html";
+        const blob = new Blob([preview.innerHTML], { type });
+        const data = [new ClipboardItem({ [type]: blob })];
+        navigator.clipboard.write(data)
+          .then(() => alert("Preview copied to clipboard."))
+          .catch(() => fallbackCopyPreview(preview));
+      } else {
+        fallbackCopyPreview(preview);
+      }
+    }
+
+    function fallbackCopyPreview(preview) {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(preview);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      try {
+        document.execCommand('copy');
+        alert('Preview copied to clipboard.');
+      } catch (e) {
+        alert('If this did not work, please manually highlight the preview and copy it.');
+      }
+      selection.removeAllRanges();
+    }
+
     window.onload = () => {
       agentName.value = "Agent Name";
       jobTitle.value = "REALTOR®";
       dreNumber.value = "07195209";
       email.value = "you@lifetimerealtygroup.com";
       cell.value = "7145551234";
-      website.value = "https://www.lifetimerealtygroup.com";
+      website.value = "www.lifetimerealtygroup.com";
       generateSignature();
     };
   </script>
 
 </body>
 </html>
+
 

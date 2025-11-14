@@ -69,20 +69,17 @@
       color: #666;
       margin-top: 4px;
     }
-    .top-bar {
-      margin-bottom: 10px;
-    }
   </style>
 </head>
+
 <body>
-  <div class="top-bar">
-    <h1>Lifetime Realty &amp; Investments – Email Signature Generator</h1>
-    <p>Fill this out and click <strong>Generate</strong>. Then copy the HTML into your email signature settings (Gmail, Apple Mail, Outlook, etc.).</p>
-  </div>
+  <h1>Lifetime Realty &amp; Investments – Email Signature Generator</h1>
+  <p>Fill this out and click <strong>Generate</strong>. Then copy the HTML into Gmail, Apple Mail, Outlook, etc.</p>
 
   <div class="row">
     <div class="col">
       <form id="sigForm">
+
         <label>
           First and Last Name (as shown)
           <input type="text" id="agentName" placeholder="Agent Name" required>
@@ -104,23 +101,21 @@
         </label>
 
         <label>
-          Cell Phone Number (displayed)
-          <input type="tel" id="cellDisplay" placeholder="(123) 456-7890" required>
+          Cell Phone Number (digits only)
+          <input type="tel" id="cell" placeholder="7145551234" required>
+          <span class="note">
+            Just type digits (e.g. <strong>7145551234</strong>).  
+            We automatically format it to <strong>(714) 555-1234</strong> with a click-to-call link.
+          </span>
         </label>
 
         <label>
-          Click-to-call Cell Phone Number (digits only, no spaces)
-          <input type="tel" id="cellRaw" placeholder="11234567890" required>
-          <span class="note">Used for the click-to-call link (<code>tel:11234567890</code>).</span>
-        </label>
-
-        <label>
-          Website URL:
+          Website URL
           <input type="url" id="website" placeholder="https://www.lifetimerealtygroup.com">
         </label>
 
         <label>
-          Headshot (Resize to 200X200px)
+          Headshot (Resize to 200×200)
           <input type="file" id="headshot" accept="image/*">
           <span class="note">Leave blank if you want the version without a headshot.</span>
         </label>
@@ -129,42 +124,37 @@
           <button type="button" onclick="generateSignature()">Generate Signature</button>
           <button type="button" onclick="copyHtml()" style="margin-left:8px;">Copy HTML</button>
         </div>
-      </form>
 
-      <p class="note">
-        Company name will automatically be shown as <strong>LIFETIME REALTY &amp; INVESTMENTS</strong>.
-      </p>
+      </form>
     </div>
 
     <div class="col">
       <h3>Preview</h3>
       <div id="preview" class="preview"></div>
 
-      <h3 style="margin-top:16px;">Signature HTML (copy this)</h3>
+      <h3 style="margin-top:16px;">Signature HTML</h3>
       <textarea id="outputHtml" readonly></textarea>
-      <p class="note">If Gmail strips styles, paste into Apple Mail first, then copy into Gmail’s signature editor.</p>
     </div>
   </div>
 
   <script>
     const logoUrl = "https://inception-app-prod.s3.amazonaws.com/ODc4ODI2MmItYmViMy00MGIzLTllMWItODUxNTE0Zjk1OWY4/content/2025/10/fc7e2f52486fd012c387493d19d22ad09570bd84.png";
+
     let headshotDataUrl = "";
 
-    // Handle headshot upload, crop to 200x200
     document.getElementById('headshot').addEventListener('change', function (e) {
       const file = e.target.files[0];
-      if (!file) {
-        headshotDataUrl = "";
-        return;
-      }
+      if (!file) { headshotDataUrl = ""; return; }
+
       const reader = new FileReader();
-      reader.onload = function (event) {
+      reader.onload = function (ev) {
         const img = new Image();
         img.onload = function () {
-          const size = 200; // 200x200px as you specified
           const canvas = document.createElement('canvas');
+          const size = 200;
           canvas.width = size;
           canvas.height = size;
+
           const ctx = canvas.getContext('2d');
 
           const minSide = Math.min(img.width, img.height);
@@ -172,33 +162,46 @@
           const sy = (img.height - minSide) / 2;
 
           ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+
           headshotDataUrl = canvas.toDataURL('image/jpeg', 0.9);
         };
-        img.src = event.target.result;
+        img.src = ev.target.result;
       };
       reader.readAsDataURL(file);
     });
 
-    function generateSignature() {
-      const name = document.getElementById('agentName').value.trim();
-      const title = document.getElementById('jobTitle').value.trim();
-      const dre = document.getElementById('dreNumber').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const cellDisplay = document.getElementById('cellDisplay').value.trim();
-      const cellRaw = document.getElementById('cellRaw').value.trim();
-      const website = document.getElementById('website').value.trim();
-
-      if (!name || !email || !cellDisplay || !cellRaw) {
-        alert("Please fill in Name, Email, and both Cell Phone fields.");
-        return;
+    function formatPhone(raw) {
+      const digits = raw.replace(/\D/g, "");
+      if (digits.length === 10) {
+        return {
+          display: `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`,
+          tel: `1${digits}`
+        };
       }
+      return { display: raw, tel: digits };
+    }
 
-      // Mailto subject & body for BOOK A MEETING
-      const subject = "Quick meeting to discuss my real estate plans";
+    function generateSignature() {
+      const name = agentName.value.trim();
+      const title = jobTitle.value.trim();
+      const dre = dreNumber.value.trim();
+      const email = document.getElementById('email').value.trim();
+      const website = document.getElementById('website').value.trim();
+      const cellInput = document.getElementById('cell').value.trim();
+
+      const { display: cellDisplay, tel: cellRaw } = formatPhone(cellInput);
+
+      const jobLine =
+        (title || dre)
+          ? (title ? title.toUpperCase() : "") +
+            (title && dre ? " | " : "") +
+            (dre ? "DRE # " + dre : "")
+          : "";
+
+      const subject = "Quick meeting to discuss real estate goals";
       const body =
         "Hi " + name + ",\n\n" +
-        "I’d like to schedule a brief meeting to talk about my real estate goals and see how we might work together. " +
-        "Please let me know a few days and times that work for you, or share a calendar link if that’s easier.\n\n" +
+        "I'd like to schedule a brief meeting to discuss real estate plans and see how we may work together.\n\n" +
         "Thank you,\n[Your Name]";
 
       const bookLink =
@@ -206,120 +209,69 @@
         "?subject=" + encodeURIComponent(subject) +
         "&body=" + encodeURIComponent(body);
 
-      const jobLine = (title || dre)
-        ? (title ? title.toUpperCase() : "") +
-          (title && dre ? " | " : "") +
-          (dre ? "DRE # " + dre.toUpperCase() : "")
-        : "";
+      let leftHTML = "";
 
-      // LEFT COLUMN HTML: headshot + logo OR logo only
-      let leftColumnHtml = "";
       if (headshotDataUrl) {
-        leftColumnHtml =
-          '<table cellpadding="0" cellspacing="0" border="0">' +
-            '<tr><td style="padding-bottom:6px;">' +
-              '<img src="' + headshotDataUrl + '" alt="' + name + '" ' +
-              'style="display:block; width:200px; height:200px; object-fit:cover; border:0; outline:none; text-decoration:none;">' +
-            '</td></tr>' +
-            '<tr><td>' +
-              '<img src="' + logoUrl + '" alt="Lifetime Realty &amp; Investments" ' +
-              'style="display:block; width:200px; height:auto; border:0; outline:none; text-decoration:none;">' +
-            '</td></tr>' +
-          '</table>';
+        leftHTML =
+          `<table><tr><td><img src="${headshotDataUrl}" style="width:200px;height:200px;object-fit:cover;display:block;"></td></tr>
+           <tr><td><img src="${logoUrl}" style="width:200px;display:block;margin-top:6px;"></td></tr></table>`;
       } else {
-        leftColumnHtml =
-          '<img src="' + logoUrl + '" alt="Lifetime Realty &amp; Investments" ' +
-          'style="display:block; width:200px; height:auto; border:0; outline:none; text-decoration:none;">';
+        leftHTML = `<img src="${logoUrl}" style="width:200px;display:block;">`;
       }
 
-      // Build HTML with your letter-spacing rules:
-      // NO spacing on job/company/button, YES spacing on contact lines.
       const html =
-        '<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial, sans-serif; font-size:6px; color:#000000;">' +
-          '<tr>' +
-            '<td valign="middle" style="padding-right:16px; border-right:1px solid #000000;">' +
-              leftColumnHtml +
-            '</td>' +
-            '<td width="16">&nbsp;</td>' +
-            '<td valign="middle" style="font-family:Arial, sans-serif; color:#000000;">' +
+        `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial;color:#000;font-size:6px;">
+          <tr>
+            <td style="padding-right:16px;border-right:1px solid #000;" valign="middle">
+              ${leftHTML}
+            </td>
+            <td width="16"></td>
+            <td valign="middle">
 
-              // Agent name
-              '<div style="font-size:15px; font-weight:bold; margin:0 0 4px 0; padding:0;">' +
-                name +
-              '</div>' +
+              <div style="font-size:15px;font-weight:bold;margin:0 0 4px 0;">${name}</div>
 
-              // Job Title | DRE (NO letter-spacing)
-              (jobLine
-                ? '<div style="font-size:6px; text-transform:uppercase; margin:0; padding:0;">' +
-                    jobLine +
-                  '</div>'
-                : '') +
+              ${jobLine ? `<div style="font-size:6px;text-transform:uppercase;">${jobLine}</div>` : ""}
 
-              // Company (NO letter-spacing)
-              '<div style="font-size:6px; text-transform:uppercase; margin:2px 0 0 0; padding:0;">' +
-                'LIFETIME REALTY &amp; INVESTMENTS' +
-              '</div>' +
+              <div style="font-size:6px;text-transform:uppercase;margin-top:2px;">LIFETIME REALTY &amp; INVESTMENTS</div>
 
-              // Spacer
-              '<div style="height:8px; line-height:8px; font-size:0;">&nbsp;</div>' +
+              <div style="height:8px;"></div>
 
-              // Contact lines (YES letter-spacing)
-              '<div style="font-size:6px; letter-spacing:0.67px; margin:0; padding:0;"><strong>C:</strong> ' +
-                '<a href="tel:' + cellRaw + '" style="color:#000000; text-decoration:none;">' +
-                  cellDisplay +
-                '</a>' +
-              '</div>' +
+              <div style="font-size:6px;letter-spacing:0.67px;"><strong>C:</strong> <a href="tel:${cellRaw}" style="color:#000;text-decoration:none;">${cellDisplay}</a></div>
+              <div style="font-size:6px;letter-spacing:0.67px;"><strong>E:</strong> <a href="mailto:${email}" style="color:#000;text-decoration:none;">${email}</a></div>
+              ${website ? `<div style="font-size:6px;letter-spacing:0.67px;"><strong>W:</strong> <a href="${website}" style="color:#000;text-decoration:none;">${website}</a></div>` : ""}
 
-              '<div style="font-size:6px; letter-spacing:0.67px; margin:0; padding:0;"><strong>E:</strong> ' +
-                '<a href="mailto:' + email + '" style="color:#000000; text-decoration:none;">' +
-                  email +
-                '</a>' +
-              '</div>' +
+              <div style="height:8px;"></div>
 
-              (website
-                ? '<div style="font-size:6px; letter-spacing:0.67px; margin:0; padding:0;"><strong>W:</strong> ' +
-                    '<a href="' + website + '" style="color:#000000; text-decoration:none;">' +
-                      website +
-                    '</a>' +
-                  '</div>'
-                : '') +
+              <table><tr><td style="background:#000;padding:4px 10px;">
+                <a href="${bookLink}" style="color:#fff;text-decoration:none;font-size:7px;text-transform:uppercase;">BOOK A MEETING</a>
+              </td></tr></table>
 
-              '<div style="height:8px; line-height:8px; font-size:0;">&nbsp;</div>' +
+            </td>
+          </tr>
+        </table>`;
 
-              // BOOK A MEETING button (NO letter-spacing)
-              '<table cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:#000000; padding:4px 10px; text-align:center;">' +
-                '<a href="' + bookLink + '" style="display:inline-block; font-size:7px; text-transform:uppercase; color:#FFFFFF; text-decoration:none;">' +
-                  'BOOK A MEETING' +
-                '</a>' +
-              '</td></tr></table>' +
-
-            '</td>' +
-          '</tr>' +
-        '</table>';
-
-      document.getElementById('preview').innerHTML = html;
-      document.getElementById('outputHtml').value = html;
+      document.getElementById("preview").innerHTML = html;
+      document.getElementById("outputHtml").value = html;
     }
 
     function copyHtml() {
-      const ta = document.getElementById('outputHtml');
-      ta.focus();
+      const ta = document.getElementById("outputHtml");
       ta.select();
-      document.execCommand('copy');
-      alert('HTML copied to clipboard.');
+      document.execCommand("copy");
+      alert("HTML copied!");
     }
 
-    // Generate once with sample data on first load
-    window.addEventListener('load', () => {
-      document.getElementById('agentName').value = "Agent Name";
-      document.getElementById('jobTitle').value = "REALTOR®";
-      document.getElementById('dreNumber').value = "07195209";
-      document.getElementById('email').value = "you@lifetimerealtygroup.com";
-      document.getElementById('cellDisplay').value = "(123) 456-7890";
-      document.getElementById('cellRaw').value = "11234567890";
-      document.getElementById('website').value = "https://www.lifetimerealtygroup.com";
+    window.onload = () => {
+      agentName.value = "Agent Name";
+      jobTitle.value = "REALTOR®";
+      dreNumber.value = "07195209";
+      email.value = "you@lifetimerealtygroup.com";
+      cell.value = "7145551234";
+      website.value = "https://www.lifetimerealtygroup.com";
       generateSignature();
-    });
+    };
   </script>
+
 </body>
 </html>
+

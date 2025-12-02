@@ -203,10 +203,11 @@
         "I'd like to schedule a brief meeting to discuss real estate plans and see how we may work together.\n\n" +
         "Thank you!";
 
-      const bookLink =
-        "mailto:" + encodeURIComponent(email) +
-        "?subject=" + encodeURIComponent(subject) +
-        "&body=" + encodeURIComponent(body);
+const bookLink =
+  "mailto:" + email +
+  "?subject=" + encodeURIComponent(subject) +
+  "&body=" + encodeURIComponent(body);
+
 
       let leftHTML = "";
 
